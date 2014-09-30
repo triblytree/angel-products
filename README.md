@@ -62,6 +62,8 @@ Open up your `app/config/packages/angel/products/config.php` and set your Stripe
 )
 ```
 
+Finally, make sure you've defined your from 'address' and 'name' in the app/config/mail.php file. If you don't, orders won't be submitted correctly and receipts won't be sent out.
+
 Cart Usage
 ----------
 [The cart class](https://github.com/JVMartin/angel-products/blob/master/src/Angel/Products/Cart.php) stores variations of products, based on their selected options, in the session.
