@@ -3,22 +3,16 @@ $cart             = json_decode($order->cart, true);
 $billing_address  = json_decode($order->billing_address);
 $shipping_address = json_decode($order->shipping_address);
 
-$Cart = App::make('Cart');
-$Cart->load($cart);
+$TempCart = clone App::make('Cart');
+$TempCart->load($cart);
 ?>
 <div class="row">
 	<div class="col-xs-12">
 		<p>
-			<b>Order ID:</b>
+			<b>Order ID:</b> {{ $order->id }}
 		</p>
 		<p>
-			{{ $order->id }}
-		</p>
-		<p>
-			<b>Order Time:</b>
-		</p>
-		<p>
-			{{ $order->created_at }}
+			<b>Order Time:</b> {{ date('m/d/Y g:i A',strtotime($order->created_at)) }}
 		</p>
 		@if (count($billing_address))
 			<p>
@@ -33,46 +27,56 @@ $Cart->load($cart);
 	</div>
 </div>
 <hr />
-@foreach ($cart as $key=>$item)
+<table width="100%" class="table-striped" cellpadding="5">
+	<thead>
+		<tr>
+			<th>Item</th>
+			<th></th>
+			<th>Price</th>
+			<th style="text-align:center;">Quantity</th>
+			<th>Subtotal</th>
+		</tr>
+	</thead>
+	<tbody>
+@foreach ($cart as $key => $item)
 	<?php $product = json_decode($item['product']); ?>
-	<div class="row">
-		<div class="col-sm-3">
-			@if (isset($product->images) && count($product->images))
-				<a href="{{ url('products/' . $product->slug) }}">
-					<img src="{{ $product->images[0]->image }}" style="width:100%" />
+		<tr>
+			<td valign="top" width="150" class="cart-item-image">
+				@if (isset($product->images) && count($product->images))
+				<a href="/products/{{ $product->slug }}">
+					<img src="{{ ($product->images[0]->thumb ? $product->images[0]->thumb : $product->images[0]->image) }}"/>
 				</a>
-			@endif
-		</div>
-		<div class="col-sm-3">
-			<h4>
-				<a href="{{ url('products/' . $product->slug) }}">
-					{{ $product->name }}
-				</a>
-			</h4>
-			<hr />
-			@foreach ($Cart->getOptions($key) as $group_name=>$option)
-				<p>
-					<b>{{ $group_name }}:</b>
-				</p>
-				<p>
-					{{ $option->name }}
-				</p>
-			@endforeach
-		</div>
-		<div class="col-sm-3">
-			<h4>Price</h4>
-			<hr />
-			<h5 style="text-decoration:line-through;font-style:italic;">${{ number_format($item['fake_price'], 2) }}</h5>
-			<h3>${{ number_format($item['price'], 2) }}</h3>
-		</div>
-		<div class="col-sm-3">
-			<h4>Quantity</h4>
-			<hr />
-			{{ $item['qty'] }}
-		</div>
-	</div>
-	<hr />
+				@endif
+			</td>
+			<td valign="top" class="cart-item-info">
+				<h3 class="cart-item-name">
+					<a href="{{ url('products/' . $product->slug) }}">
+						{{ $product->name }}
+					</a>
+				</h3>
+				<div class="cart-item-options">
+				@foreach($TempCart->getOptions($key) as $group_name => $option)
+					<p>
+						<em>{{ $group_name }}:</em>
+						{{ $option->name }}
+					</p>
+				@endforeach
+				</div>
+			</td>
+			<td valign="top" width="15%" class="cart-item-price">
+				<h3>${{ number_format($item['price'], 2) }}</h3>
+			</td>
+			<td valign="top" width="10%" align="center" class="cart-item-quantity">
+				<h3>{{ $item['qty'] }}</h3>
+			</td>
+			<td valign="top" width="15%" class="cart-item-subtotal">
+				<h3>${{ number_format($TempCart->totalForKey($key),2) }}</h3>
+			</td>
+		</tr>
 @endforeach
-<div class="text-right">
-	<h3>Total: ${{ number_format($order->total, 2) }}</h3>
-</div>
+		<tr>
+			<td colspan="4" align="right"><h3>Total:</h3></td>
+			<td colspan="2"><h3>${{ number_format($order->total, 2) }}</span></h3></td>
+		</tr>
+	 </tbody>
+</table>

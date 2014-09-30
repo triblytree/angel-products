@@ -73,84 +73,88 @@
 @stop
 
 @section('content')
-	<h1>Shopping Cart</h1>
-	<hr />
-	@if (!$Cart->all())
-		<div class="alert alert-info">
-			There are no items in your cart!
+		<div class="row">
+			<h1>Shopping Cart</h1>
 		</div>
-	@endif
-	{{ Form::open(array('id'=>'qtyForm', 'url'=>'cart-qty')) }}
+		<div class="row">
+	@if (!$Cart->all())
+			<div class="alert alert-info">
+				There are no items in your cart!
+			</div><br />
+	@else
+			{{ Form::open(array('id'=>'qtyForm', 'url'=>'cart-qty')) }}
+			<table width="100%" class="table-striped" cellpadding="5">
+				<thead>
+					<tr>
+						<th>Item</th>
+						<th></th>
+						<th>Price</th>
+						<th style="text-align:center;">Quantity</th>
+						<th>Subtotal</th>
+					</tr>
+				</thead>
+				<tbody>
 		@foreach ($Cart->all() as $key=>$item)
 			<?php $product = json_decode($item['product']); ?>
-			<div class="row">
-				<div class="col-sm-3">
+					<tr>
+						<td valign="top" width="150" class="cart-item-image">
 					@if (isset($product->images) && count($product->images))
-						<a href="{{ url('products/' . $product->slug) }}">
-							<img src="{{ $product->images[0]->image }}" style="width:100%" />
-						</a>
+							<a href="/products/{{ $product->slug }}">
+								<img src="{{ ($product->images[0]->thumb ? $product->images[0]->thumb : $product->images[0]->image) }}"/>
+							</a>
 					@endif
-				</div>
-				<div class="col-sm-3">
-					<h4>
-						<a href="{{ url('products/' . $product->slug) }}">
-							{{ $product->name }}
-						</a>
-					</h4>
-					<hr />
+						</td>
+						<td valign="top" class="cart-item-info">
+							<h3 class="cart-item-name">
+								<a href="{{ url('products/' . $product->slug) }}">
+									{{ $product->name }}
+								</a>
+							</h3>
+							<div class="cart-item-options">
 					@foreach ($Cart->getOptions($key) as $group_name=>$option)
-						<p>
-							<b>{{ $group_name }}:</b>
-						</p>
-						<p>
-							{{ $option->name }}
-						</p>
+								<p>
+									<em>{{ $group_name }}:</em>
+									{{ $option->name }}
+								</p>
 					@endforeach
-				</div>
-				<div class="col-sm-3">
-					<h4>Price</h4>
-					<hr />
-					@if ($product->fake_price > 0)
-						<h5 class="fakePriceWrap">${{ number_format($item['fake_price'], 2) }}</h5>
-					@endif
-					<h3>${{ number_format($item['price'], 2) }}</h3>
-				</div>
-				<div class="col-sm-3">
-					<h4>Quantity</h4>
-					<hr />
-					@if (isset($item['max_qty']) && $item['max_qty'] < 10)
-						<p>
-							<i>Only {{ $item['max_qty'] }} left!</i>
-						</p>
-					@endif
-					<div class="form-group">
-						<button type="button" class="btn btn-primary btn-xs qtyMinus">
-							<span class="glyphicon glyphicon-minus"></span>
-						</button>
-						{{ Form::text('qty['.$key.']', $item['qty'], array('class'=>'form-control text-center qty', 'style'=>'display:inline-block;width:50px;', 'data-max-qty'=>isset($item['max_qty']) ? $item['max_qty'] : null)) }}
-						<button type="button" class="btn btn-primary btn-xs qtyPlus">
-							<span class="glyphicon glyphicon-plus"></span>
-						</button>
-					</div>
-					<p>
-						<a href="{{ url('cart-remove/' . urlencode($key)) }}" class="btn btn-xs btn-default removeItem">
-							Remove This Item
-						</a>
-					</p>
-				</div>
-			</div>
-			<hr />
+							</div>
+						</td>
+						<td valign="top" width="15%" class="cart-item-price">
+							<h3>${{ number_format($item['price'], 2) }}</h3>
+						</td>
+						<td valign="top" width="10%" align="center" class="cart-item-quantity">
+							{{--
+							<button type="button" class="btn btn-primary btn-xs qtyMinus">
+								<span class="glyphicon glyphicon-minus"></span>
+							</button>
+							{{ Form::text('qty['.$key.']', $item['qty'], array('class'=>'form-control text-center qty', 'style'=>'display:inline-block;width:50px;', 'data-max-qty'=>isset($item['max_qty']) ? $item['max_qty'] : null)) }}
+							<button type="button" class="btn btn-primary btn-xs qtyPlus">
+								<span class="glyphicon glyphicon-plus"></span>
+							</button>
+							--}}
+							<h3>{{ $item['qty'] }}</h3>
+						</td>
+						<td valign="top" width="15%" class="cart-item-subtotal">
+							<h3>${{ number_format($Cart->totalForKey($key),2) }}</h3>
+						</td>
+						<td valign="top" width="5%" class="cart-item-remove">
+							<a href="{{ url('cart-remove/' . urlencode($key)) }}" class="glyphicon glyphicon-remove removeItem"></a>
+						</td>
+					</tr>
 		@endforeach
-	{{ Form::close() }}
-	@if ($Cart->all())
-		<div class="row">
-			<div class="col-xs-12 text-right">
-				<h3>Subtotal: $<span id="subtotal">{{ number_format($Cart->total(), 2) }}</span></h3>
-				<a id="proceed" class="btn btn-primary" href="{{ url('checkout') }}">
-					Proceed to Checkout
-					<span class="glyphicon glyphicon-arrow-right"></span>
-				</a>
-			</div>
+		@if ($Cart->all())
+					<tr>
+						<td colspan="4" align="right"><h3>Subtotal:</h3></td>
+						<td colspan="2"><h3>$<span id="subtotal">{{ number_format($Cart->total(), 2) }}</span></h3></td>
+					</tr>
+		@endif
+				 </tbody>
+			</table>
+			{{ Form::close() }}<br />
+			<a id="proceed" class="button button-right btn btn-primary" href="{{ url('checkout') }}">
+				Proceed to Checkout
+			</a>
+			<div class="clearfix"></div><br />
 		</div>
 	@endif
 @stop
