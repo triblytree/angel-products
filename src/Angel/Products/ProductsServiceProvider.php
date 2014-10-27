@@ -33,12 +33,15 @@ class ProductsServiceProvider extends ServiceProvider {
 			'ProductOption'     => '\Angel\Products\ProductOption',
 			'ProductOptionItem' => '\Angel\Products\ProductOptionItem',
 			'Order'             => '\Angel\Products\Order',
+			'Discount'          => '\Angel\Products\Discount',
 
 			// Controllers
 			'AdminProductCategoryController' => '\Angel\Products\AdminProductCategoryController',
 			'AdminProductController'         => '\Angel\Products\AdminProductController',
 			'AdminOrderController'           => '\Angel\Products\AdminOrderController',
 			'ProductController'              => '\Angel\Products\ProductController'
+			'AdminDiscountController'        => '\Angel\Products\AdminDiscountController'
+			'DiscountControlle'              => '\Angel\Products\DiscountControlle'
 		);
 
 		foreach ($bindings as $name=>$class) {

@@ -32,7 +32,7 @@ $Cart->load($cart);
 </p>
 @include('products::orders.address', array('address'=>$shipping_address))
 <hr />
-@foreach ($cart as $key=>$item)
+@foreach ($Cart->all() as $key=>$item)
 	<?php $product = json_decode($item['product']); ?>
 	@if (isset($product->images) && count($product->images))
 		<p>
@@ -62,6 +62,16 @@ $Cart->load($cart);
 	</p>
 	<hr />
 @endforeach
+@if($shipping = $Cart->totalShipping()) 
+<p class="text-right">
+	<b>Shipping: ${{ number_format($shipping, 2) }}</b>
+</p>
+@endif
+@if($discount = $Cart->totalDiscount()) 
+<p class="text-right">
+	<b>Discount: -${{ number_format($discount, 2) }}</b>
+</p>
+@endif
 <p class="text-right">
 	<b>Total: ${{ number_format($order->total, 2) }}</b>
 </p>

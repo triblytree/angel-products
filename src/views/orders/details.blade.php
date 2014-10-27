@@ -38,7 +38,7 @@ $TempCart->load($cart);
 		</tr>
 	</thead>
 	<tbody>
-@foreach ($cart as $key => $item)
+@foreach ($Cart->all() as $key => $item)
 	<?php $product = json_decode($item['product']); ?>
 		<tr>
 			<td valign="top" width="150" class="cart-item-image">
@@ -74,6 +74,18 @@ $TempCart->load($cart);
 			</td>
 		</tr>
 @endforeach
+@if($shipping = $Cart->totalShipping()) 
+		<tr>
+			<td colspan="4" align="right"><h3>Shipping:</h3></td>
+			<td colspan="2"><h3>${{ number_format($shipping, 2) }}</span></h3></td>
+		</tr>
+@endif
+@if($discount = $Cart->totalDiscount()) 
+		<tr>
+			<td colspan="4" align="right"><h3>Discount:</h3></td>
+			<td colspan="2"><h3>-${{ number_format($discount, 2) }}</span></h3></td>
+		</tr>
+@endif
 		<tr>
 			<td colspan="4" align="right"><h3>Total:</h3></td>
 			<td colspan="2"><h3>${{ number_format($order->total, 2) }}</span></h3></td>

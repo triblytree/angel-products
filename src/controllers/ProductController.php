@@ -148,11 +148,25 @@ class ProductController extends \Angel\Core\AngelController {
 			$order->user_id = Auth::user()->id;
 		}
 
-		$order->cart = json_encode($this->Cart->all());
+		$order->cart = json_encode($this->Cart->export());
 		$order->save();
 
 		$charge->metadata['order_id'] = $order->id;
 		$charge->save();
+		
+		// Discounts - if 'onetime', mark as 'used'
+		if($discounts = $this->Cart->discounts()) {
+			$Discount = App::make('Discount');
+			foreach($discounts as $k => $v) {
+				if($v['id']) {
+					$discount = $Discount::find($v['id']);
+					if($discount->onetime) {
+						$discount->used = 1;
+						$discount->save();
+					}
+				}
+			}
+		}
 
 		Session::put('just-ordered', $order->id);
 		$this->Cart->destroy();
@@ -166,6 +180,7 @@ class ProductController extends \Angel\Core\AngelController {
 
 	public function email_receipt($order)
 	{
+		if(!isset($this->data['order'])) $this->data['order'] = $order; // Sometimes I just call this method when testing
 		Mail::send('products::orders.emails.receipt', $this->data, function($message) use ($order) {
 			$message->to($order->email)->subject('Receipt for Order #' . $order->id);
 		});

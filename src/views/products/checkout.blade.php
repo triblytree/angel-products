@@ -61,6 +61,55 @@
 				scrollTop: $where.offset().top - 50
 			}, 500);
 		}
+		
+		// Highlight
+		jQuery.fn.highlight = function() {
+		   $(this).each(function() {
+				var el = $(this);
+				el.before("<div/>")
+				el.prev()
+					.width(el.outerWidth())
+					.height(el.outerHeight())
+					.css({
+						"position": "absolute",
+						"background-color": "#ffff99",
+						"opacity": ".9"   
+					})
+					.fadeOut(1200);
+			});
+		}
+		
+		// Discount
+		function discountApply() {
+			var $error = $('#discount-errors');
+			$error.hide().html('');
+			var discount = $('#discount').val();
+			if(!discount) $error.show().html("Please enter the promo code you'd like to use.");
+			else {
+				$.ajax({
+					type:'POST',
+					url:'/discounts/apply',
+					data:{
+						code:discount
+					},
+					dataType:'json',
+					success:function(result) {
+						console.log(result);
+						if(result.error) $('#discount-errors').show().html(result.error);
+						else {
+							$('#discount').val('');
+							$('#discountContainer').show();
+							$('#discountDisplay').html(result.discount);
+							$('#totalDisplay').html(result.total);
+							$('html, body').animate({
+								scrollTop: ($("#discountContainer").offset().top - 50)
+							}, 200);
+							$('.discountContainer').highlight();
+						}
+					}
+				});
+			}
+		}
 	</script>
 @stop
 
@@ -111,16 +160,23 @@
 								<td></td>
 								<td>$0.00</td>
 							</tr>
+							--}}
+							@if($Cart->totalShipping())
 							<tr>
 								<td>Shipping</td>
 								<td></td>
-								<td>$0.00</td>
+								<td>${{ number_format($Cart->totalShipping(),2) }}</td>
 							</tr>
-							--}}
+							@endif
+							<tr id="discountContainer"{{ ($Cart->totalDiscount() ? '' : ' style="display:none;"') }}>
+								<td>Discount</td>
+								<td></td>
+								<td>-$<span id="discountDisplay">{{ number_format($Cart->totalDiscount(),2) }}</span></td>
+							</tr>
 							<tr>
 								<td><b>Total</b></td>
 								<td></td>
-								<td><b>${{ number_format($Cart->total(), 2) }}</b></td>
+								<td><b>$<span id="totalDisplay">{{ number_format($Cart->total(), 2) }}</span></b></td>
 							</tr>
 						</tbody>
 					</table>
@@ -229,6 +285,21 @@
 						{{ Form::text('shipping_zip', null, array('class'=>'form-control', 'placeholder'=>'Zip Code', 'required')) }}
 					</div>
 				</form><br />
+				
+				<?php
+				$discounts = DB::table('discounts')->count();
+				?>
+				@if($discounts)
+				<form action="" method="POST" id="discount-form">
+					<h3>Promo Code</h3>
+					<hr />
+					<div id="discount-errors" class="alert-box alert radius" style="display:none;"></div>
+					<div class="form-group">
+						{{ Form::text(null, null, array('id'=>'discount', 'class'=>'form-control', 'placeholder'=>'Promo Code')) }}
+						<input type="submit" value="Apply" onclick="discountApply();return false;" class="btn discountSubmit" />
+					</div>
+				</form><br />
+				@endif
 				
 				<button type="button" class="button btn btn-primary" id="submit" autocomplete="off" style="margin-bottom:15px;">
 					Submit Payment

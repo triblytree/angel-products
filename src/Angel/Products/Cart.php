@@ -20,6 +20,10 @@ class Cart {
 		if (!Session::has('cart')) Session::put('cart', array());
 
 		$this->cart = Session::get('cart');
+		if(!$this->cart) $this->cart = array(
+			'items' => array(),
+			'discounts' => array()
+		);
 	}
 
 	/**
@@ -28,6 +32,16 @@ class Cart {
 	protected function save()
 	{
 		Session::put('cart', $this->cart);
+	}
+
+	/**
+	 * Return an array representing the whole cart cart array.
+	 *
+	 * @return array - The cart array.
+	 */
+	public function export()
+	{
+		return $this->cart;
 	}
 
 	/**
@@ -86,21 +100,21 @@ class Cart {
 			}
 		}
 
-		if (array_key_exists($key, $this->cart)) {
-			$desired_qty = $this->cart[$key]['qty'] + $qty;
-			if (isset($this->cart[$key]['max_qty'])) {
-				$this->cart[$key]['qty'] = ($desired_qty > $this->cart[$key]['max_qty']) ? $this->cart[$key]['max_qty'] : $desired_qty;
+		if (array_key_exists($key, $this->cart['items'])) {
+			$desired_qty = $this->cart['items'][$key]['qty'] + $qty;
+			if (isset($this->cart['items'][$key]['max_qty'])) {
+				$this->cart['items'][$key]['qty'] = ($desired_qty > $this->cart['items'][$key]['max_qty']) ? $this->cart['items'][$key]['max_qty'] : $desired_qty;
 			}
 		} else {
-			$this->cart[$key] = array(
+			$this->cart['items'][$key] = array(
 				'product'    => $product->toJson(),
 				'price'      => $price,
 				'fake_price' => $fake_price,
 				'qty'        => $qty
 			);
 			if ($product->inventory) {
-				$this->cart[$key]['max_qty'] = $max_qty;
-				$this->cart[$key]['qty'] = ($qty > $max_qty) ? $max_qty : $qty;
+				$this->cart['items'][$key]['max_qty'] = $max_qty;
+				$this->cart['items'][$key]['qty'] = ($qty > $max_qty) ? $max_qty : $qty;
 			}
 		}
 
@@ -117,9 +131,9 @@ class Cart {
 	 */
 	public function remove($key)
 	{
-		if (!array_key_exists($key, $this->cart)) return false;
+		if (!array_key_exists($key, $this->cart['items'])) return false;
 
-		unset($this->cart[$key]);
+		unset($this->cart['items'][$key]);
 		$this->save();
 
 		return true;
@@ -133,19 +147,19 @@ class Cart {
 	 */
 	public function get($key)
 	{
-		if (!array_key_exists($key, $this->cart)) return false;
+		if (!array_key_exists($key, $this->cart['items'])) return false;
 
-		return $this->cart[$key];
+		return $this->cart['items'][$key];
 	}
 
 	/**
-	 * Return the cart array.
+	 * Return the cart items array.
 	 *
-	 * @return array - The cart.
+	 * @return array - The cart items array.
 	 */
 	public function all()
 	{
-		return $this->cart;
+		return $this->cart['items'];
 	}
 
 	/**
@@ -155,8 +169,10 @@ class Cart {
 	public function count()
 	{
 		$count = 0;
-		foreach ($this->cart as $item) {
-			$count += $item['qty'];
+		if($this->cart['items']) {
+			foreach ($this->cart['items'] as $item) {
+				$count += $item['qty'];
+			}
 		}
 		return $count;
 	}
@@ -168,9 +184,9 @@ class Cart {
 	 */
 	public function getOptions($key)
 	{
-		if (!array_key_exists($key, $this->cart)) return false;
+		if (!array_key_exists($key, $this->cart['items'])) return false;
 
-		$product = json_decode($this->cart[$key]['product']);
+		$product = json_decode($this->cart['items'][$key]['product']);
 
 		$options = array();
 		foreach ($product->selected_options as $string=>$option) {
@@ -195,14 +211,14 @@ class Cart {
 	 */
 	public function quantity($key, $quantity)
 	{
-		if (!array_key_exists($key, $this->cart)) return false;
+		if (!array_key_exists($key, $this->cart['items'])) return false;
 
 		if ($quantity == 0) return $this->remove($key);
 
-		if (isset($this->cart[$key]['max_qty']) && $quantity > $this->cart[$key]['max_qty']) {
-			$quantity = $this->cart[$key]['max_qty'];
+		if (isset($this->cart['items'][$key]['max_qty']) && $quantity > $this->cart['items'][$key]['max_qty']) {
+			$quantity = $this->cart['items'][$key]['max_qty'];
 		}
-		$this->cart[$key]['qty'] = $quantity;
+		$this->cart['items'][$key]['qty'] = $quantity;
 		$this->save();
 
 		return true;
@@ -217,14 +233,41 @@ class Cart {
 	 */
 	public function maxQuantity($key, $max_quantity)
 	{
-		if (!array_key_exists($key, $this->cart)) return false;
+		if (!array_key_exists($key, $this->cart['items'])) return false;
 
 		if ($max_quantity == 0) return $this->remove($key);
 
-		$this->cart[$key]['max_qty'] = $max_quantity;
+		$this->cart['items'][$key]['max_qty'] = $max_quantity;
 		$this->save();
 
 		return true;
+	}
+	
+	/**
+	 * Get the subtotal amount for the cart's contents.
+	 *
+	 * @return float $total - The subtotal  amount.
+	 */
+	public function subtotal()
+	{
+		$total = 0;
+
+		foreach (array_keys($this->cart['items']) as $key) {
+			$total += $this->subtotalForKey($key);
+		}
+
+		return $total;
+	}
+	
+	/**
+	 * Get the subtotal dollar amount for a specific cart product variation.
+	 *
+	 * @return float $total - The subtotal dollar amount for the cart product, or false if it doesn't exist.
+	 */
+	public function subtotalForKey($key)
+	{
+		if (!array_key_exists($key, $this->cart['items'])) return false;
+		return $this->cart['items'][$key]['price'] * $this->cart['items'][$key]['qty'];
 	}
 
 	/**
@@ -236,13 +279,75 @@ class Cart {
 	{
 		$total = 0;
 
-		foreach (array_keys($this->cart) as $key) {
+		foreach (array_keys($this->cart['items']) as $key) {
 			$total += $this->totalForKey($key);
+		}
+		
+		// Discounts (flat rate, which are applied to cart as a whole, not individual items)
+		$total -= $this->totalDiscountFlat();
+		if($total < 0) $total = 0;
+
+		return $total;
+	}
+
+	/**
+	 * Get the total shipping amount for the cart's contents.
+	 *
+	 * @return float $total - The total shipping amount.
+	 */
+	public function totalShipping()
+	{
+		$total = 0;
+
+		foreach (array_keys($this->cart['items']) as $key) {
+			$total += $this->shippingForKey($key);
 		}
 
 		return $total;
 	}
 
+	/**
+	 * Get the total discount amount for the cart's contents.
+	 *
+	 * @return float $total - The total discount amount.
+	 */
+	public function totalDiscount()
+	{
+		$total = 0;
+		if(count($this->cart['discounts'])) {
+			// Item specific
+			foreach (array_keys($this->cart['items']) as $key) {
+				$total += $this->DiscountForKey($key);
+			}
+			
+			// Flat rate
+			$total += $this->totalDiscountFlat();
+		}
+				
+		return $total;
+	}
+
+	/**
+	 * Get the total flat rate discount amount for the cart.
+	 *
+	 * Flat rate discounts apply to the cart as a whole (not individual items) so we calculated it differently.
+	 *
+	 * @return float $total - The total flat rate discount amount.
+	 */
+	public function totalDiscountFlat()
+	{
+		$total = 0;
+		if(count($this->cart['discounts'])) {
+			foreach($this->cart['discounts'] as $k => $v) {
+				if($v['type'] == "flat") {
+					$total += $v['rate'];	
+				}
+			}
+		}
+				
+		return $total;
+	}
+	
 	/**
 	 * Get the total dollar amount for a specific cart product variation.
 	 *
@@ -250,11 +355,78 @@ class Cart {
 	 */
 	public function totalForKey($key)
 	{
-		if (!array_key_exists($key, $this->cart)) return false;
-
-		return $this->cart[$key]['price'] * $this->cart[$key]['qty'];
+		if (!array_key_exists($key, $this->cart['items'])) return false;
+		$price = $this->cart['items'][$key]['price'] * $this->cart['items'][$key]['qty'];
+		$price += $this->shippingForKey($key);
+		$price -= $this->discountForKey($key);
+		return $price;
 	}
+	
+	/**
+	 * Get the shipping amount for a specific cart product variation.
+	 *
+	 * @return float $total - The total shipping amount for the cart product, or false if it doesn't exist.
+	 */
+	public function shippingForKey($key)
+	{
+		if (!array_key_exists($key, $this->cart['items'])) return false;
+		$product = json_decode($this->cart['items'][$key]['product']);	
+		if(isset($product->shipping)) return $product->shipping * $this->cart['items'][$key]['qty'];
+	}
+	
+	/**
+	 * Add discount to cart.
+	 *
+	 * @param float $rate - The discount rate we want to apply
+	 * @param string $type - The type of discount rate: flat [default] or percent
+	 * @param array $values - An optional array of values to attach to the discount. Use this for values you may need to recall later (ex: id, code, name, etc.)
+	 */
+	public function discount($rate,$type = "flat",$values = NULL)
+	{
+		$values['rate'] = $rate;
+		$values['type'] = $type;
+		$key = ($values['id'] ? $values['id'] : md5(implode($values)));
+		$this->cart['discounts'][$key] = $values;
 
+		$this->save();
+	}
+	
+	/**
+	 * Get the discount amount for a specific cart product variation.
+	 *
+	 * @return float $total - The total discount amount for the cart product, or false if it doesn't exist.
+	 */
+	public function discountForKey($key)
+	{
+		if (!array_key_exists($key, $this->cart['items'])) return false;
+		
+		$discount = 0;
+		$product = json_decode($this->cart['items'][$key]['product']);
+		if(count($this->cart['discounts'])) {
+			foreach($this->cart['discounts'] as $k => $v) {
+				// Percent
+				if($v['type'] == "percent") {
+					$discount += round(($v['rate'] / 100) * $this->cart['items'][$key]['price'],2) * $this->cart['items'][$key]['qty'];
+				}
+				// Flat rate
+				else {
+					# Discount is applied to the 'total', not per item, if flat rate
+				}
+			}
+		}
+		
+		return $discount;
+	}
+	
+	/**
+	 * Returns array of 'discounts' in cart.
+	 *
+	 * @return array An array of 'discounts' in the cart.
+	 */
+	public function discounts()
+	{
+		return $this->cart['discounts'];
+	}
 
 	/**
 	 * Get all the cart products and cache them.
@@ -306,7 +478,7 @@ class Cart {
 	{
 		if ($this->decoded) return $this->decoded;
 
-		$this->decoded = $this->cart;
+		$this->decoded = $this->cart['items'];
 		foreach ($this->decoded as &$item) {
 			$item['product'] = json_decode($item['product'], true);
 		}
