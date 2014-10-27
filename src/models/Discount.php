@@ -3,6 +3,29 @@
 use Angel\Core\LinkableModel;
 
 class Discount extends LinkableModel {
+	// Columns to update on edit/add
+	public static function columns()
+	{
+		return array(
+			'name',
+			'code',
+			'type',
+			'rate',
+			'user_id',
+			'onetime',
+		);
+	}
+
+	public function validate_rules()
+	{
+		return array(
+			'name' => 'required',
+			'code' => 'required',
+			'type' => 'required',
+			'rate' => 'required',
+		);
+	}
+	
 	///////////////////////////////////////////////
 	//               Menu Linkable               //
 	///////////////////////////////////////////////
