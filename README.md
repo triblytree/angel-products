@@ -32,8 +32,9 @@ Open up your `app/config/packages/angel/core/config.php` and add the products an
 'menu' => array(
 	'Pages'     => 'pages',
 	'Menus'     => 'menus',
-	'Products'  => 'products', // <--- Add this line
-	'Orders'    => 'orders',   // <--- Add this line
+	'Products'  => 'products',  // <--- Add this line
+	'Discounts' => 'discounts', // <--- Add this line
+	'Orders'    => 'orders',    // <--- Add this line
 	'Users'     => 'users',
 	'Settings'  => 'settings'
 ),
@@ -63,6 +64,13 @@ Open up your `app/config/packages/angel/products/config.php` and set your Stripe
 ```
 
 Finally, make sure you've defined your from 'address' and 'name' in the app/config/mail.php file. If you don't, orders won't be submitted correctly and receipts won't be sent out.
+
+```php
+'from' => array(
+	'address' => 'xxxx@xxxx.xxx',
+	'name' => 'xxxx'
+),
+```
 
 Cart Usage
 ----------
@@ -153,6 +161,9 @@ foreach (Session::get('cart') as $key=>$details) {
 ```php
 // The total for all products in the cart.
 echo $Cart->total();
+
+// The subtotal for all products in the cart (aka, not including shipping or discounts)
+echo $Cart->subtotal();
 
 // The total for a specific product variation by key.
 echo $Cart->totalForKey($key);
