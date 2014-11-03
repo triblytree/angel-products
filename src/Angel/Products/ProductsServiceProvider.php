@@ -25,6 +25,8 @@ class ProductsServiceProvider extends ServiceProvider {
 
 		$bindings = array(
 			'Cart'              => '\Angel\Products\Cart',
+			'Payment'           => '\Angel\Products\Payment',
+			'PaymentAuthorize'  => '\Angel\Products\PaymentAuthorize',
 
 			// Models
 			'Product'           => '\Angel\Products\Product',

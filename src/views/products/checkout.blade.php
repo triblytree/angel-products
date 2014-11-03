@@ -21,8 +21,13 @@
 
 		$(function() {
 			$('#submit').click(function() {
-				$(this).prop('disabled', true).html('Submitting...');
+				@if(Config::get('products::method') == "stripe")   
+				$(this).attr('value','Submitting...');
 				Stripe.card.createToken($('#payment-form'), stripeResponseHandler);
+				@else
+				$('#checkout-form').submit();
+				$(this).attr('value','Submitting...');
+				@endif
 			});
 		});
 
