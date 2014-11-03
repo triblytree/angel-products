@@ -114,3 +114,4 @@ Route::group(array('prefix'=>admin_uri('discounts'), 'before'=>'admin'), functio
 	));
 });
 Route::post('discounts/apply','DiscountController@apply');
+Route::post('checkout/tax','ProductController@tax');

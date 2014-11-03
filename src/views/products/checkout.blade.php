@@ -115,6 +115,42 @@
 				});
 			}
 		}
+		
+		@if($rates = Config::get('products::tax'))
+		// Tax
+		$('input[name="shipping_state"], input[name="billing_state"], input[name="sameAddress"]').change(function() {
+			var shipping = $('input[name="shipping_state"]').val();
+			var billing_same = $('input[name="sameAddress"]:checked').val();
+			if(billing_same) var billing = shipping;
+			else var billing = $('input[name="billing_state"]').val();
+			if(shipping && billing) {
+				$("input[type=submit]").attr('disabled','disabled');
+				$.ajax({
+					method:'POST',
+					url:'/checkout/tax',
+					data:{
+						shipping:shipping,
+						billing:billing
+					},
+					dataType:'json',
+					success:function(result) {
+						console.log(result);
+						$('#tax').html(result.tax);
+						$('#total').html(result.total);
+						if(result.tax > 0) {
+							$('#taxContainer').show();
+							$('html, body').animate({
+								scrollTop: ($("#total").offset().top - 25)
+							}, 200);
+							$('.subtotal').highlight();
+						}
+						else $('#taxContainer').hide();
+						$("input[type=submit]").removeAttr('disabled');
+					}
+				});
+			}
+		});
+		@endif
 	</script>
 @stop
 
@@ -173,6 +209,11 @@
 								<td>${{ number_format($Cart->totalShipping(),2) }}</td>
 							</tr>
 							@endif
+							<tr id="taxContainer"{{ ($Cart->totalTax() ? '' : ' style="display:none;"') }}>
+								<td>Tax</td>
+								<td></td>
+								<td>$<span id="tax">{{ number_format($Cart->totalTax(),2) }}</span></td>
+							</tr>
 							<tr id="discountContainer"{{ ($Cart->totalDiscount() ? '' : ' style="display:none;"') }}>
 								<td>Discount</td>
 								<td></td>
@@ -192,70 +233,71 @@
 				</div>
 			</div>
 			<div class="col-sm-8">
+				<form url="" method="POST" id="checkout-form">
 			@if ($settings['stripe']['value'] == 'test')
-				<div class="alert alert-info">
-					Stripe is in test mode.
-				</div>
+					<div class="alert alert-info">
+						Payments are in test mode.
+					</div>
 			@endif
-				<h1>Checkout</h1>
-				<hr />
-				<div id="payment-errors"></div>
-				<form action="" method="POST" id="payment-form">
-					<div class="form-group" style="max-width:400px;">
-						<span class="required">*</span>
-						{{ Form::label(null, 'Card Number') }}
-						{{ Form::text(null, null, array('id'=>'card', 'class'=>'form-control', 'placeholder'=>'Card Number', 'data-stripe'=>'number')) }}
+					<h1>Checkout</h1>
+					<hr />
+					<div id="payment-errors"></div>
+					<div id="payment-form">
+						<div class="form-group" style="max-width:400px;">
+							<span class="required">*</span>
+							{{ Form::label('card_number', 'Card Number') }}
+							{{ Form::text('card_number', null, array('id'=>'card', 'class'=>'form-control', 'placeholder'=>'Card Number', 'data-stripe'=>'number', 'required')) }}
+						</div>
+						<div class="form-group" style="width:100px;display:inline-block;">
+							<span class="required">*</span>
+							{{ Form::label('card_expiration_month', 'Exp. Month') }}
+							{{ Form::text('card_expiration_month', null, array('class'=>'form-control', 'placeholder'=>'Exp. Month', 'data-stripe'=>'exp_month', 'required')) }}
+						</div>
+						<div class="form-group" style="width:100px;margin-left:15px;display:inline-block;">
+							<span class="required">*</span>
+							{{ Form::label('card_expiration_yearh', 'Exp. Year') }}
+							{{ Form::text('card_expiration_yearh', null, array('class'=>'form-control', 'placeholder'=>'Exp. Year', 'data-stripe'=>'exp_year', 'required')) }}
+						</div>
+						<div class="form-group" style="width:100px;">
+							<span class="required">*</span>
+							{{ Form::label('card_code', 'CVC') }}
+							{{ Form::text('card_code', null, array('class'=>'form-control', 'placeholder'=>'CVC', 'data-stripe'=>'cvc', 'required')) }}
+						</div>
 					</div>
-					<div class="form-group" style="width:100px;display:inline-block;">
-						<span class="required">*</span>
-						{{ Form::label(null, 'Exp. Month') }}
-						{{ Form::text(null, null, array('class'=>'form-control', 'placeholder'=>'Exp. Month', 'data-stripe'=>'exp_month')) }}
-					</div>
-					<div class="form-group" style="width:100px;margin-left:15px;display:inline-block;">
-						<span class="required">*</span>
-						{{ Form::label(null, 'Exp. Year') }}
-						{{ Form::text(null, null, array('class'=>'form-control', 'placeholder'=>'Exp. Year', 'data-stripe'=>'exp_year')) }}
-					</div>
-					<div class="form-group" style="width:100px;">
-						<span class="required">*</span>
-						{{ Form::label(null, 'CVC') }}
-						{{ Form::text(null, null, array('class'=>'form-control', 'placeholder'=>'CVC', 'data-stripe'=>'cvc')) }}
-					</div>
-				</form>
-				<div id="address-errors"></div>
-				<form action="" method="POST" id="address-form">
+					
+					<div id="address-errors"></div>
 					{{ Form::token() }}
 					<input type="hidden" id="stripeToken" name="stripeToken" />
 					<div class="form-group">
 						<span class="required">*</span>
 						{{ Form::label('email', 'Email') }}
-						{{ Form::text('email', (Auth::check()) ? Auth::user()->email : null, array('class'=>'form-control', 'placeholder'=>'Email')) }}
+						{{ Form::text('email', (Auth::check()) ? Auth::user()->email : null, array('class'=>'form-control', 'placeholder'=>'Email', 'required')) }}
 					</div><gr />
-					<h3>Billing Address (Optional)</h3>
+					<h3>Billing Address{{ (Config::get('products::method') == "stripe" ? " (Optional)" : "") }}</h3>
 					<hr />
 					<div class="form-group">
 						{{ Form::label('billing_name', 'Name') }}
-						{{ Form::text('billing_name', null, array('class'=>'form-control', 'placeholder'=>'Name')) }}
+						{{ Form::text('billing_name', null, array('class'=>'form-control', 'placeholder'=>'Name', 'required')) }}
 					</div>
 					<div class="form-group">
 						{{ Form::label('billing_address', 'Address') }}
-						{{ Form::text('billing_address', null, array('class'=>'form-control', 'placeholder'=>'Address')) }}
+						{{ Form::text('billing_address', null, array('class'=>'form-control', 'placeholder'=>'Address', 'required')) }}
 					</div>
 					<div class="form-group">
 						{{ Form::label('billing_address_2', 'Address 2') }}
-						{{ Form::text('billing_address_2', null, array('class'=>'form-control', 'placeholder'=>'Address 2')) }}
+						{{ Form::text('billing_address_2', null, array('class'=>'form-control', 'placeholder'=>'Address 2', 'required')) }}
 					</div>
 					<div class="form-group">
 						{{ Form::label('billing_city', 'City') }}
-						{{ Form::text('billing_city', null, array('class'=>'form-control', 'placeholder'=>'City')) }}
+						{{ Form::text('billing_city', null, array('class'=>'form-control', 'placeholder'=>'City', 'required')) }}
 					</div>
 					<div class="form-group" style="width:70px;">
 						{{ Form::label('billing_state', 'State') }}
-						{{ Form::text('billing_state', null, array('class'=>'form-control', 'placeholder'=>'State')) }}
+						{{ Form::text('billing_state', null, array('class'=>'form-control', 'placeholder'=>'State', 'required')) }}
 					</div>
 					<div class="form-group" style="width:120px;">
 						{{ Form::label('billing_zip', 'Zip Code') }}
-						{{ Form::text('billing_zip', null, array('class'=>'form-control', 'placeholder'=>'Zip Code')) }}
+						{{ Form::text('billing_zip', null, array('class'=>'form-control', 'placeholder'=>'Zip Code', 'required')) }}
 					</div><br />
 					
 					<h3>Shipping Address</h3>
@@ -263,52 +305,50 @@
 					<div class="form-group">
 						<span class="required">*</span>
 						{{ Form::label('shipping_name', 'Name') }}
-						{{ Form::text('shipping_name', null, array('class'=>'form-control', 'placeholder'=>'Name')) }}
+						{{ Form::text('shipping_name', null, array('class'=>'form-control', 'placeholder'=>'Name', 'required')) }}
 					</div>
 					<div class="form-group">
 						<span class="required">*</span>
 						{{ Form::label('shipping_address', 'Address') }}
-						{{ Form::text('shipping_address', null, array('class'=>'form-control', 'placeholder'=>'Address')) }}
+						{{ Form::text('shipping_address', null, array('class'=>'form-control', 'placeholder'=>'Address', 'required')) }}
 					</div>
 					<div class="form-group">
 						{{ Form::label('shipping_address_2', 'Address 2') }}
-						{{ Form::text('shipping_address_2', null, array('class'=>'form-control', 'placeholder'=>'Address 2')) }}
+						{{ Form::text('shipping_address_2', null, array('class'=>'form-control', 'placeholder'=>'Address 2', 'required')) }}
 					</div>
 					<div class="form-group">
 						<span class="required">*</span>
 						{{ Form::label('shipping_city', 'City') }}
-						{{ Form::text('shipping_city', null, array('class'=>'form-control', 'placeholder'=>'City')) }}
+						{{ Form::text('shipping_city', null, array('class'=>'form-control', 'placeholder'=>'City', 'required')) }}
 					</div>
 					<div class="form-group" style="width:70px;">
 						<span class="required">*</span>
 						{{ Form::label('shipping_state', 'State') }}
-						{{ Form::text('shipping_state', null, array('class'=>'form-control', 'placeholder'=>'State')) }}
+						{{ Form::text('shipping_state', null, array('class'=>'form-control', 'placeholder'=>'State', 'required')) }}
 					</div>
 					<div class="form-group" style="width:120px;">
 						<span class="required">*</span>
 						{{ Form::label('shipping_zip', 'Zip Code') }}
 						{{ Form::text('shipping_zip', null, array('class'=>'form-control', 'placeholder'=>'Zip Code', 'required')) }}
-					</div>
-				</form><br />
+					</div><br />
 				
 				<?php
 				$discounts = DB::table('discounts')->count();
 				?>
 				@if($discounts)
-				<form action="" method="POST" id="discount-form">
 					<h3>Promo Code</h3>
 					<hr />
 					<div id="discount-errors" class="alert-box alert radius" style="display:none;"></div>
 					<div class="form-group">
 						{{ Form::text(null, null, array('id'=>'discount', 'class'=>'form-control', 'placeholder'=>'Promo Code')) }}
 						<input type="submit" value="Apply" onclick="discountApply();return false;" class="btn discountSubmit" />
-					</div>
-				</form><br />
+					</div><br />
 				@endif
 				
-				<button type="button" class="button btn btn-primary" id="submit" autocomplete="off" style="margin-bottom:15px;">
-					Submit Payment
-				</button>
+					<button type="button" class="button btn btn-primary" id="submit" autocomplete="off" style="margin-bottom:15px;">
+						Submit Payment
+					</button>
+				</form>
 			</div>
 		</div>
 @stop

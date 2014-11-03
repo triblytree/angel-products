@@ -67,6 +67,11 @@ $Cart->load($cart);
 	<b>Shipping: ${{ number_format($shipping, 2) }}</b>
 </p>
 @endif
+@if($tax = $Cart->totalTax()) 
+<p class="text-right">
+	<b>Tax: ${{ number_format($tax, 2) }}</b>
+</p>
+@endif
 @if($discount = $Cart->totalDiscount()) 
 <p class="text-right">
 	<b>Discount: -${{ number_format($discount, 2) }}</b>

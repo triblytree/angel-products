@@ -80,6 +80,12 @@ $TempCart->load($cart);
 			<td colspan="2"><h3>${{ number_format($shipping, 2) }}</span></h3></td>
 		</tr>
 @endif
+@if($tax = $Cart->totalTax()) 
+		<tr>
+			<td colspan="4" align="right"><h3>Tax:</h3></td>
+			<td colspan="2"><h3>${{ number_format($tax, 2) }}</span></h3></td>
+		</tr>
+@endif
 @if($discount = $Cart->totalDiscount()) 
 		<tr>
 			<td colspan="4" align="right"><h3>Discount:</h3></td>

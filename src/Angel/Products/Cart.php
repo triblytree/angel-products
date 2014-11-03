@@ -22,7 +22,8 @@ class Cart {
 		$this->cart = Session::get('cart');
 		if(!$this->cart) $this->cart = array(
 			'items' => array(),
-			'discounts' => array()
+			'discounts' => array(),
+			'tax' => 0
 		);
 	}
 
@@ -317,7 +318,7 @@ class Cart {
 		if(count($this->cart['discounts'])) {
 			// Item specific
 			foreach (array_keys($this->cart['items']) as $key) {
-				$total += $this->DiscountForKey($key);
+				$total += $this->discountForKey($key);
 			}
 			
 			// Flat rate
@@ -347,6 +348,23 @@ class Cart {
 				
 		return $total;
 	}
+
+	/**
+	 * Get the total tax amount for the cart's contents.
+	 *
+	 * @return float $total - The total tax amount.
+	 */
+	public function totalTax()
+	{
+		$total = 0;
+		if($this->cart['tax']) {
+			foreach (array_keys($this->cart['items']) as $key) {
+				$total += $this->taxForKey($key);
+			}
+		}
+				
+		return $total;
+	}
 	
 	/**
 	 * Get the total dollar amount for a specific cart product variation.
@@ -358,6 +376,7 @@ class Cart {
 		if (!array_key_exists($key, $this->cart['items'])) return false;
 		$price = $this->cart['items'][$key]['price'] * $this->cart['items'][$key]['qty'];
 		$price += $this->shippingForKey($key);
+		$price += $this->taxForKey($key);
 		$price -= $this->discountForKey($key);
 		return $price;
 	}
@@ -426,6 +445,41 @@ class Cart {
 	public function discounts()
 	{
 		return $this->cart['discounts'];
+	}
+	
+	/**
+	 * Returns and (if $rate passed) sets tax rate for cart.
+	 *
+	 * @param float $rate - The tax rate we want to apply. Default = NULL
+	 * @return float The tax rate for the cart.
+	 */
+	public function tax($rate = NULL)
+	{
+		// Set
+		if(strlen($rate)) {
+			$this->cart['tax'] = $rate;
+			$this->save();
+		}
+		
+		// Return
+		return $this->cart['tax'];
+	}
+	
+	/**
+	 * Get the tax amount for a specific cart product variation.
+	 *
+	 * @return float $total - The total tax amount for the cart product, or false if it doesn't exist.
+	 */
+	public function taxForKey($key)
+	{
+		if (!array_key_exists($key, $this->cart['items'])) return false;
+		
+		$tax = 0;
+		if($this->cart['tax']) {
+			$tax = round($this->cart['tax'] * $this->cart['items'][$key]['price'] * $this->cart['items'][$key]['qty'],2);
+		}
+		
+		return $tax;
 	}
 
 	/**
