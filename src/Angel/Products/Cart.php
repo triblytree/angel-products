@@ -23,8 +23,12 @@ class Cart {
 		if(!$this->cart) $this->cart = array(
 			'items' => array(),
 			'discounts' => array(),
-			'tax' => 0
+			'tax' => 0,
+			'error' => NULL,
 		);
+		
+		// Clear error
+		$this->cart['error'] = NULL;
 	}
 
 	/**
@@ -67,6 +71,18 @@ class Cart {
 	}
 
 	/**
+	 * Returns (and sets, if $error passed) any existing error that may have occured.
+	 *
+	 * @param string $error An error you want to store.
+	 * @return string The error (if any) that occured.
+	 */
+	public function error($error = NULL)
+	{
+		if($error) $this->cart['error'] = $error;
+		return $this->cart['error'];
+	}
+
+	/**
 	 * Create a unique key for the product based on its selected options.
 	 *
 	 * @param Product &$product - The product we're generating a key for.
@@ -103,15 +119,30 @@ class Cart {
 
 		if (array_key_exists($key, $this->cart['items'])) {
 			$desired_qty = $this->cart['items'][$key]['qty'] + $qty;
-			if (isset($this->cart['items'][$key]['max_qty'])) {
-				$this->cart['items'][$key]['qty'] = ($desired_qty > $this->cart['items'][$key]['max_qty']) ? $this->cart['items'][$key]['max_qty'] : $desired_qty;
-			}
 		} else {
+			$desired_qty = $qty;
+		}
+		
+		// Inventory - if not enough, we send error
+		if($product->inventory) {
+			if($desired_qty > $max_qty) {
+				if(!$max_qty) $this->error("This item is currently sold out.");
+				else $this->error("There ".($max_qty == 1 ? "is" : "are")." only ".$max_qty." of this item left.");
+				return;
+			}
+		}
+		
+		// Existing
+		if (array_key_exists($key, $this->cart['items'])) {
+			$this->cart['items'][$key]['qty'] = $desired_qty;
+		}
+		// New
+		else {
 			$this->cart['items'][$key] = array(
 				'product'    => $product->toJson(),
 				'price'      => $price,
 				'fake_price' => $fake_price,
-				'qty'        => $qty
+				'qty'        => $desired_qty
 			);
 			if ($product->inventory) {
 				$this->cart['items'][$key]['max_qty'] = $max_qty;
@@ -357,7 +388,7 @@ class Cart {
 	public function totalTax()
 	{
 		$total = 0;
-		if($this->cart['tax']) {
+		if(isset($this->cart['tax'])) {
 			foreach (array_keys($this->cart['items']) as $key) {
 				$total += $this->taxForKey($key);
 			}

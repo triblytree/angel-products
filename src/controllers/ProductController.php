@@ -44,14 +44,22 @@ class ProductController extends \Angel\Core\AngelController {
 	{
 		$Product = App::make('Product');
 		$product = $Product::with('images', 'options')->findOrFail(Input::get('product_id'));
-
 		$product->markSelectedOptions(Input::get('options'));
+		
+		// Add
 		$this->Cart->add($product, Input::get('qty'));
-
-		return Redirect::back()->with('success', array(
-			'This product has been added to your cart!',
-			'<a href="' . url('cart') . '">View Cart</a>'
-		))->withInput(); // With input so that the options drop-downs stay the same.
+		
+		// Error
+		if($this->Cart->error()) {
+			return Redirect::back()->with('error', $this->Cart->error())->withInput();
+		}
+		// Success
+		else {
+			return Redirect::back()->with('success', array(
+				'This product has been added to your cart!',
+				'<a href="' . url('cart') . '">View Cart</a>'
+			))->withInput(); // With input so that the options drop-downs stay the same.
+		}
 	}
 
 	public function cart_qty()
