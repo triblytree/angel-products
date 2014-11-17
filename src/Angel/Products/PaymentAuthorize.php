@@ -474,6 +474,7 @@ if(!class_exists('PaymentAuthorize',false)) {
 			
 			// Card expiration - MMYY
 			if($payment->card['expiration_month'] and $payment->card['expiration_year']) {
+				if(strlen($payment->card['expiration_year']) == 2) $payment->card['expiration_year'] = "20".$payment->card['expiration_year'];
 				$payment->card['expiration'] = str_pad($payment->card['expiration_month'],2,"0",STR_PAD_LEFT).substr($payment->card['expiration_year'],2,2);
 			}
 			
