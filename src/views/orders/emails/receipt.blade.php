@@ -6,9 +6,21 @@ $shipping_address = json_decode($order->shipping_address);
 $Cart = App::make('Cart');
 $Cart->load($cart);
 ?>
+@if($admin)
+<p>
+	A new order has been placed.
+</p>
+<p>
+	<a href="{{ url("admin/orders/show/".$order->id) }}">{{ url("admin/orders/show/".$order->id) }}</a>
+</p>
+<p>
+	Below is a copy of the receipt.
+</p>
+@else
 <p>
 	Thank you for your order!  Here is your receipt.
 </p>
+@endif
 <p>
 	<b>Order ID:</b>
 </p>

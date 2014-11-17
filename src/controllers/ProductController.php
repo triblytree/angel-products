@@ -292,8 +292,14 @@ class ProductController extends \Angel\Core\AngelController {
 	public function email_receipt($order)
 	{
 		if(!isset($this->data['order'])) $this->data['order'] = $order; // Sometimes I just call this method when testing
+		// Customer
 		Mail::send('products::orders.emails.receipt', $this->data, function($message) use ($order) {
 			$message->to($order->email)->subject('Receipt for Order #' . $order->id);
+		});
+		// Admin
+		$this->data['admin'] = 1;
+		Mail::send('products::orders.emails.receipt', $this->data, function($message) use ($order) {
+			$message->to(Config::get('mail.from.address'))->subject('Receipt for Order #' . $order->id);
 		});
 	}
 
