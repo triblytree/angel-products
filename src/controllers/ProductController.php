@@ -238,6 +238,7 @@ class ProductController extends \Angel\Core\AngelController {
 				'city'      => Input::get('billing_city'),
 				'state'     => Input::get('billing_state'),
 				'zip'       => Input::get('billing_zip'),
+				'phone'     => Input::get('billing_phone'),
 			);
 			$order->billing_address = json_encode($billing);
 		}
@@ -249,6 +250,7 @@ class ProductController extends \Angel\Core\AngelController {
 			'city'      => Input::get('shipping_city'),
 			'state'     => Input::get('shipping_state'),
 			'zip'       => Input::get('shipping_zip'),
+			'phone'     => Input::get('shipping_phone'),
 		);
 		$order->shipping_address = $charge->metadata['shipping'] = json_encode($shipping);
 

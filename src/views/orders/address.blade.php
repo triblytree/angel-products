@@ -1,8 +1,12 @@
-<p>{{ $address->name }}</p>
-<p>{{ $address->address }}</p>
+{{ $address->name }}<br />
+{{ $address->address }}<br />
 @if ($address->address_2)
-	<p>{{ $address->address_2 }}</p>
+{{ $address->address_2 }}<br />
 @endif
-<p>
-	{{ $address->city }}, {{ $address->state }} {{ $address->zip }}
-</p>
+{{ $address->city }}, {{ $address->state }} {{ $address->zip }}<br />
+@if ($address->country and $address->country != "United_States")
+{{ $address->country }}<br />
+@endif       
+@if ($address->phone)
+{{ $address->phone }}<br />
+@endif       

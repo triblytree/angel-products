@@ -298,6 +298,10 @@
 					<div class="form-group" style="width:120px;">
 						{{ Form::label('billing_zip', 'Zip Code') }}
 						{{ Form::text('billing_zip', null, array('class'=>'form-control', 'placeholder'=>'Zip Code', 'required')) }}
+					</div>
+					<div class="form-group">
+						{{ Form::label('billing_phone', 'Phone') }}
+						{{ Form::text('billing_phone', null, array('class'=>'form-control', 'placeholder'=>'Phone', 'required')) }}
 					</div><br />
 					
 					<h3>Shipping Address</h3>
@@ -330,6 +334,11 @@
 						<span class="required">*</span>
 						{{ Form::label('shipping_zip', 'Zip Code') }}
 						{{ Form::text('shipping_zip', null, array('class'=>'form-control', 'placeholder'=>'Zip Code', 'required')) }}
+					</div>
+					<div class="form-group">
+						<span class="required">*</span>
+						{{ Form::label('shipping_phone', 'Phone') }}
+						{{ Form::text('shipping_phone', null, array('class'=>'form-control', 'placeholder'=>'Phone', 'required')) }}
 					</div><br />
 				
 				<?php

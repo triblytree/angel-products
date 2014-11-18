@@ -8,22 +8,34 @@ $TempCart->load($cart);
 ?>
 <div class="row">
 	<div class="col-xs-12">
-		<p>
-			<b>Order ID:</b> {{ $order->id }}
-		</p>
-		<p>
-			<b>Order Time:</b> {{ date('m/d/Y g:i A',strtotime($order->created_at)) }}
-		</p>
-		@if (count($billing_address))
-			<p>
-				<b>Billed To:</b>
-			<p>
-			@include('products::orders.address', array('address'=>$billing_address))
-		@endif
-		<p>
-			<b>Shipping To:</b>
-		</p>
-		@include('products::orders.address', array('address'=>$shipping_address))
+		<table style="width:auto;">
+			<tr>
+				<td valign="top"><b>Order ID:</b></td>
+				<td valign="top">{{ $order->id }}</td>
+			</tr>
+			<tr>
+				<td valign="top"><b>Order Time:</b></td>
+				<td valign="top">{{ date('m/d/Y g:i A',strtotime($order->created_at)) }}</td>
+			</tr>
+			<tr>
+				<td valign="top"><b>E-mail:</b></td>
+				<td valign="top"><a href="mailto:{{ $order->email }}">{{ $order->email }}</a></td>
+			</tr>
+			<tr>
+				<td valign="top"><b>Shipping:</b></td>
+				<td valign="top">
+					@include('products::orders.address', array('address'=>$shipping_address))
+				</td>
+			</tr>
+			@if (count($billing_address))
+			<tr>
+				<td valign="top"><b>Billing:</b></td>
+				<td valign="top">
+					@include('products::orders.address', array('address'=>$billing_address))
+				</td>
+			</tr>
+			@endif
+		</table>
 	</div>
 </div>
 <hr />
