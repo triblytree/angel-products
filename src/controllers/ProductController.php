@@ -12,6 +12,16 @@ class ProductController extends \Angel\Core\AngelController {
 		$this->Cart = $this->data['Cart'] = App::make('Cart');
 	}
 
+	public function category($slug)
+	{
+		// Category
+		$ProductCategory = App::make('ProductCategory');
+		$this->data['category'] = $ProductCategory->where('slug',$slug)->firstOrFail();
+
+		// View
+		return View::make('products::products.category', $this->data);
+	}
+
 	public function view($slug)
 	{
 		$Product         = App::make('Product');

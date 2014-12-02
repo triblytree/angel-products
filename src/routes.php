@@ -1,6 +1,7 @@
 <?php
 
 Route::get('products/{slug}', 'ProductController@view');
+Route::get('products/categories/{slug}', 'ProductController@category');
 Route::post('cart-add', array(
 	'before' => 'csrf',
 	'uses' => 'ProductController@cart_add'

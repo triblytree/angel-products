@@ -311,5 +311,12 @@ class Product extends \Angel\Core\LinkableModel {
 			}
 		})->get();
 	}
+	
+	function image() {
+		if(count($this->images)) {
+			$image = ($this->images[0]->thumb ? $this->images[0]->thumb : $this->images[0]->image);
+		}
+		return $image;
+	}
 
 }
