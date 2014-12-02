@@ -108,4 +108,27 @@ class ProductCategory extends \Angel\Core\LinkableModel {
 		})->get();
 	}
 
+	public function image() {
+		// Defined image
+		$image = $this->image;
+		
+		// Items
+		if(!$image) {
+			foreach($this->products as $product) {
+				$image = $product->image();
+				if($image) break;
+			}
+		}
+		
+		// Sub-categories
+		if(!$image) {
+			foreach($this->children as $subcategory) {
+				$image = $subcategory->image();	
+				if($image) break;
+			}
+		}
+		
+		// Return
+		return $image;
+	}
 }
