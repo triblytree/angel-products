@@ -8,6 +8,13 @@ Installation
 ------------
 Add the following requirements to your `composer.json` file:
 ```javascript
+"repositories":
+[
+	{
+		"type": "vcs",
+		"url": "https://github.com/CharlesAV/angel-products"
+	}
+],
 "require": {
 	"angel/products": "dev-master"
 },
