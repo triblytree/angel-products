@@ -307,7 +307,7 @@ class Product extends \Angel\Core\LinkableModel {
 		return static::where(function($query) use ($terms) {
 			foreach ($terms as $term) {
 				$query->orWhere('name', 'like', $term);
-				$query->orWhere('url',  'like', $term);
+				$query->orWhere('slug', 'like', $term);
 			}
 		})->get();
 	}
