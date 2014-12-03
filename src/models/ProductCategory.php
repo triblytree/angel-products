@@ -131,4 +131,17 @@ class ProductCategory extends \Angel\Core\LinkableModel {
 		// Return
 		return $image;
 	}
+	
+	function top() {
+		if(!$this->id) return;
+		
+		if(!$this->parent_id) {
+			return $this;
+		}
+		else {
+			$ProductCategory = App::make('ProductCategory');
+			$parent_category = $ProductCategory->find($this->parent_id);
+			return $parent_category->top();
+		}	
+	}
 }
