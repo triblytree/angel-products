@@ -1,20 +1,18 @@
 {
-	"name": "angel/products",
-	"description": "An Angel CMS module for products.",
+	"name": "tribly/ecommerce",
+	"description": "An e-commerce module for Laravel.",
 	"keywords": [
-		"angel",
-		"cms",
 		"laravel",
 		"products",
 		"commerce",
 		"cart"
 	],
-	"homepage": "https://github.com/JVMartin/angel-products",
+	"homepage": "https://github.com/triblytree/ecommerce",
 	"authors": [
 		{
-			"name": "Jacob Martin",
-			"email": "jacobm@angelvisiontech.com",
-			"homepage": "http://jacobvmartin.com"
+			"name": "Charles Konsor",
+			"email": "charliekonsor@gmail.com",
+			"homepage": "http://charleskonsor.com"
 		}
 	],
 	"require": {
@@ -29,7 +27,7 @@
 			"src/models"
 		],
 		"psr-0": {
-			"Angel\\Products\\": "src/"
+			"Tribly\\Ecommerce\\": "src/"
 		}
 	}
 }
