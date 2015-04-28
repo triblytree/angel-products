@@ -1,8 +1,6 @@
-Angel Products
+E-commerce
 ==============
-This is an eCommerce module for the [Angel CMS](https://github.com/JVMartin/angel).
-
-The module works with Stripe automatically, or you can easily extend it to use other payment gateways.
+This is an eCommerce module for Laravel.
 
 Installation
 ------------
@@ -12,11 +10,11 @@ Add the following requirements to your `composer.json` file:
 [
 	{
 		"type": "vcs",
-		"url": "https://github.com/CharlesAV/angel-products"
+		"url": "https://github.com/triblytree/ecommerce"
 	}
 ],
 "require": {
-	"angel/products": "dev-master"
+	"tribly/ecommerce": "dev-master"
 },
 ```
 
@@ -24,39 +22,17 @@ Issue a `composer update` to install the package.
 
 Add the following service provider to your `providers` array in `app/config/app.php`:
 ```php
-'Angel\Products\ProductsServiceProvider'
+'Tribly\Ecommerce\EcommerceServiceProvider'
 ```
 
 Issue the following commands:
 ```bash
-php artisan migrate --package="angel/products"   # Run the migrations
+php artisan migrate --package="tribly/ecommerce"   # Run the migrations
 php artisan asset:publish                        # Publish the assets
-php artisan config:publish angel/products        # Publish the config
+php artisan config:publish tribly/ecommerce        # Publish the config
 ```
 
-Open up your `app/config/packages/angel/core/config.php` and add the products and orders routes to the `menu` array:
-```php
-'menu' => array(
-	'Pages'     => 'pages',
-	'Menus'     => 'menus',
-	'Products'  => 'products',  // <--- Add this line
-	'Discounts' => 'discounts', // <--- Add this line
-	'Orders'    => 'orders',    // <--- Add this line
-	'Users'     => 'users',
-	'Settings'  => 'settings'
-),
-```
-
-...and the menu-linkable models to the `linkable_models` array:
-```php
-'linkable_models' => array(
-	'Page'             => 'pages',
-	'Product'          => 'products',           // <--- Add this line
-	'ProductCategory'  => 'products/categories' // <--- Add this line
-)
-```
-
-Open up your `app/config/packages/angel/products/config.php` and set your Stripe API keys:
+Open up your `app/config/packages/tribly/ecommerce/config.php` and set your credentials for your payment gateway. An example using Stripe:
 ```php
 'stripe' => array(
 	'test' => array(
